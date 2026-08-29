@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>冲刺力速关系弹性框架</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{max-width:1000px;margin:2em auto;padding:1.5em 2em;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.5;color:#333;background:#f5fbfa}
+h1{font-size:1.3em;text-align:center;background:linear-gradient(135deg,#00B4D8,#20C997);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.3em;font-weight:700}
+h2{font-size:1.1em;margin:1em 0 0.5em;padding-bottom:3px;border-bottom:2px solid #7FDBDA;display:inline-block;color:#333;font-weight:600}
+.panel{border:none;border-radius:14px;padding:14px 18px;margin:8px 0;background:#fff;box-shadow:0 2px 12px rgba(0,180,216,0.08)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.col{display:flex;flex-direction:column}
+.col label{font-size:11px;color:#999;margin-bottom:2px;font-weight:500}
+.col input{padding:5px 10px;border:1.5px solid #e0f0ee;border-radius:8px;font-size:13px;width:80px;font-family:inherit;background:#fff;transition:border .2s}
+.col input:focus{outline:none;border-color:#00B4D8;box-shadow:0 0 0 3px rgba(0,180,216,0.1)}
+.col input.w{width:110px}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;color:#555;padding:5px 0}
+.chk input{width:auto}
+table{border-collapse:collapse;margin:6px 0;font-size:12.5px;width:100%}
+th,td{border:1px solid #e0f0ee;padding:4px 8px;text-align:center}
+th{background:linear-gradient(135deg,#e0f7fa,#e8f8f5);font-size:11px;color:#555;font-weight:600}
+td input{width:100%;border:none;text-align:right;padding:3px;font-size:12px;background:transparent;font-family:inherit;color:#333}
+td input:focus{outline:none;background:#e0f7fa;border-radius:4px}
+.btn{padding:5px 14px;border:none;border-radius:20px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500;transition:all .2s}
+.btn-pri{background:linear-gradient(135deg,#00B4D8,#20C997);color:#fff;box-shadow:0 2px 8px rgba(0,180,216,0.25)}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,180,216,0.35)}
+.btn-sec{background:#fff;color:#00B4D8;border:1.5px solid #7FDBDA;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.btn-sec:hover{background:#e0f7fa;border-color:#20C997}
+.sec-label{font-size:11px;font-weight:600;color:#999;margin:4px 0 2px;text-align:center;letter-spacing:0.3px}
+.c4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.c5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.c2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#fff;padding:8px;border-radius:12px;border:none;text-align:center;box-shadow:0 1px 6px rgba(0,180,216,0.06)}
+.card .lb{font-size:10px;color:#bbb;letter-spacing:0.5px;font-weight:600}
+.card .vl{font-size:1.3em;font-weight:700;color:#333}
+.card .vl.g{color:#20C997}
+.card .vl.o{color:#F39C12}
+.card .vl.t{color:#0E8388}
+.chart-box{position:relative;background:#fff;border:none;border-radius:12px;padding:6px;margin:6px 0;height:260px;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+.html-legend{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 14px;font-family:Georgia,"Times New Roman",serif;font-size:12px;color:#555;padding:4px 2px}
+.html-legend .lg{display:inline-block;cursor:pointer;user-select:none;white-space:nowrap}
+.html-legend .lg.dim{opacity:0.3}
+.html-legend .sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.html-legend .sw.pt{width:10px;height:10px;border-radius:50%}
+.html-legend sub{font-size:8px;vertical-align:sub}
+.chart-tip{position:absolute;background:rgba(0,0,0,0.8);color:#fff;padding:6px 10px;border-radius:6px;font:12px Georgia,"Times New Roman",serif;pointer-events:none;z-index:99;white-space:nowrap}
+.chart-tip sub{font-size:9px;vertical-align:sub}
+.axis-switch{font-family:Georgia,"Times New Roman",serif;font-size:12px;color:#555;white-space:nowrap}
+.axis-switch select{font:inherit;padding:2px 4px;border:1px solid #c5dcd8;border-radius:6px;background:#fff;color:#333}
+.hint{font-size:12px;color:#888;margin:2px 0 6px;line-height:1.6}
+.eq{text-align:center;margin:5px 0;font-size:12px;color:#aaa}
+.pred-note{font-size:12px;color:#666;background:#f0f9f6;border-radius:10px;padding:8px 12px;margin:8px 0;line-height:1.7}
+.delta-up{color:#20C997;font-weight:700}
+.delta-down{color:#E74C3C;font-weight:700}
+.lang-btn{border:none;background:transparent;font-size:12px;font-weight:600;padding:4px 9px;border-radius:4px;cursor:pointer;color:#666;font-family:inherit;line-height:1.2;transition:background .15s,color .15s}
+.lang-btn:hover{background:#eee}
+.lang-btn.active{background:#0E8388;color:#fff}
+@media(max-width:700px){.c4{grid-template-columns:1fr 1fr}.c5{grid-template-columns:1fr 1fr}.c2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="langBar" style="position:fixed;top:14px;right:18px;z-index:99;display:flex;gap:4px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:3px;box-shadow:0 1px 4px rgba(0,0,0,.08)"></div>
+
+<h1 data-i18n="title">冲刺力速关系弹性框架</h1>
+
+<h2 data-i18n="secFit">从分段时间拟合参数</h2>
+<div class="panel">
+<p class="hint" data-i18n="fitHint">输入身高、体重、气压、温度与每一帧/分段计时数据，用有阻力闭式解（Eq. 8，α 见 Eq. 9）拟合 <i>F</i><sub>0</sub>、<i>v</i><sub>0</sub>，所有帧数据点同时参与最小二乘拟合，拟合后自动运行弹性分析。</p>
+<div class="row">
+<div class="col"><label data-i18n="lblH">身高 (m)</label><input id="fH" type="number" value="1.77" step="0.01" class="w"></div>
+<div class="col"><label data-i18n="lblM">体重 (kg)</label><input id="fM" type="number" value="72" step="0.5" class="w"></div>
+<div class="col"><label data-i18n="lblP">气压 (mmHg)</label><input id="fP" type="number" value="760" step="1" class="w"></div>
+<div class="col"><label data-i18n="lblT">温度 (°C)</label><input id="fT" type="number" value="25" step="0.5" class="w"></div>
+</div>
+<label class="chk" style="margin-top:6px"><input id="airChk" type="checkbox" checked><span data-i18n="lblAir">考虑空气阻力（数值解）</span></label>
+<table id="fitTbl" style="margin-top:8px">
+<thead><tr><th>#</th><th data-i18n="thFD">距离 (m)</th><th data-i18n="thFT">时间 (s)</th><th></th></tr></thead>
+<tbody>
+<tr><td>1</td><td><input id="d1" type="number" value="5" step="0.5"></td><td><input id="t1" type="number" value="1.40" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+<tr><td>2</td><td><input id="d2" type="number" value="10" step="0.5"></td><td><input id="t2" type="number" value="2.23" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+<tr><td>3</td><td><input id="d3" type="number" value="15" step="0.5"></td><td><input id="t3" type="number" value="2.98" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+<tr><td>4</td><td><input id="d4" type="number" value="20" step="0.5"></td><td><input id="t4" type="number" value="3.64" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+<tr><td>5</td><td><input id="d5" type="number" value="25" step="0.5"></td><td><input id="t5" type="number" value="4.29" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+<tr><td>6</td><td><input id="d6" type="number" value="30" step="0.5"></td><td><input id="t6" type="number" value="4.99" step="0.01"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td></tr>
+</tbody>
+</table>
+<div class="row" style="margin-top:8px">
+<div class="col"><button class="btn btn-sec" onclick="addFitRow()" data-i18n="btnAddRow">+ 添加帧/分段时间行</button></div>
+<div class="col"><button class="btn btn-pri" onclick="fitFromSplits()" data-i18n="btnFit">拟合参数</button></div>
+</div>
+<input id="F0" type="hidden" value="8.5">
+<input id="V0" type="hidden" value="8.5">
+<input id="k" type="hidden" value="0.0038">
+<div id="fitRes" style="display:none;margin-top:10px">
+<div class="sec-label" data-i18n="secFitRes">拟合结果</div>
+<div class="c5">
+<div class="card"><div class="lb" data-i18n="fitF0"><i>F</i><sub>0</sub> (N/kg)</div><div class="vl g" id="rF0">—</div></div>
+<div class="card"><div class="lb" data-i18n="fitV0"><i>v</i><sub>0</sub> (m/s)</div><div class="vl g" id="rV0">—</div></div>
+<div class="card"><div class="lb" data-i18n="fitPmax">P<sub>max</sub> (W/kg)</div><div class="vl o" id="rPmax">—</div></div>
+<div class="card"><div class="lb" data-i18n="fitSlope">F-V slope (s⁻¹)</div><div class="vl o" id="rSlope">—</div></div>
+<div class="card"><div class="lb" data-i18n="fitVmax"><i>v</i><sub>max</sub> (m/s)</div><div class="vl t" id="rVmax">—</div></div>
+</div>
+<p class="hint" style="margin-top:6px" id="fitExtra"></p>
+<div class="sec-label" data-i18n="secResiduals" style="margin-top:8px">拟合残差</div>
+<table id="resTbl">
+<thead><tr><th data-i18n="thResD">距离 (m)</th><th data-i18n="thResT">时间 (s)</th><th data-i18n="thResMod">位置模型 (m)</th><th data-i18n="thResDiff">残差 (m)</th><th data-i18n="thResSq">平方差</th></tr></thead>
+<tbody></tbody>
+</table>
+<p class="hint" id="fitQual" style="display:none;margin-top:6px;font-weight:700"></p>
+</div>
+</div>
+
+<div id="out" style="display:none">
+
+<div style="border:1.5px solid #c5dcd8;border-radius:12px;padding:12px 14px 6px;background:linear-gradient(135deg,#fafffe,#f0f9f6);margin-bottom:10px;box-shadow:0 2px 8px rgba(0,180,216,0.06)">
+<div class="sec-label" data-i18n="secKey">关键距离</div>
+<div class="c2">
+<div class="card"><div class="lb" data-i18n="cardValley">谷底距离 <i>d</i><sub>valley</sub></div><div class="vl o" id="rValley">—</div></div>
+<div class="card"><div class="lb" data-i18n="cardBal">平衡距离 (F-V<sub>ER</sub>=1)</div><div class="vl g" id="rBal">—</div></div>
+</div>
+</div>
+
+<h2 data-i18n="secTable">各距离弹性</h2>
+<div class="panel">
+<table id="distTbl">
+<tr><th data-i18n="thDist">距离 (m)</th><th data-i18n="thT">时间 <i>t</i> (s)</th><th data-i18n="thFe"><i>F</i><sub>e</sub></th><th data-i18n="thVe"><i>v</i><sub>e</sub></th><th data-i18n="thEN">F-V<sub>EN</sub></th><th data-i18n="thER">F-V<sub>ER</sub></th><th data-i18n="thCon">2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub></th></tr>
+</table>
+<p class="hint" data-i18n="consHint">守恒律 2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub>=1：无阻力时精确成立；有阻力时近似成立（偏差 &lt;2%）。</p>
+</div>
+
+<h2 data-i18n="secKinetic">力、速度、功率、位移随时间变化</h2>
+<div class="panel">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+<div class="html-legend" id="kinLegend" style="justify-content:flex-start"></div>
+<label class="axis-switch"><span data-i18n="lblXAxis">x 轴</span>：<select id="kinX" onchange="kinXChange()"><option value="t" selected data-i18n="axTime">时间 (s)</option><option value="d" data-i18n="axDist">距离 (m)</option></select></label>
+</div>
+<div class="chart-box" style="height:320px"><canvas id="kinC"></canvas><div class="chart-tip" id="kinTip" style="display:none"></div></div>
+</div>
+
+<h2 data-i18n="secFeVe">弹性指标随距离变化</h2>
+<div class="panel">
+<p class="hint" data-i18n="chartHint"><i>F</i><sub>e</sub>、<i>v</i><sub>e</sub>、F-V<sub>EN</sub> 用左轴；F-V<sub>ER</sub> 用右轴。红色三角为谷底（F-V<sub>EN</sub> 最小处）。</p>
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+<div class="html-legend" id="feveLegend" style="justify-content:flex-start"></div>
+<label class="axis-switch"><span data-i18n="lblXAxis">x 轴</span>：<select id="feveX" onchange="feveXChange()"><option value="d" selected data-i18n="axDist">距离 (m)</option><option value="t" data-i18n="axTime">时间 (s)</option></select></label>
+</div>
+<div class="chart-box" style="height:320px"><canvas id="feveC"></canvas><div class="chart-tip" id="feveTip" style="display:none"></div></div>
+</div>
+
+<h2 data-i18n="secPredict">训练预测</h2>
+<div class="panel">
+<p class="hint" data-i18n="predHint">输入初始速度、冲刺距离与训练后的 <i>F</i><sub>0</sub>、<i>v</i><sub>0</sub>，预测冲刺时间与弹性指标的变化。</p>
+<div class="row">
+<div class="col"><label data-i18n="lblV0cur">初始速度 <i>v</i> (m/s)</label><input id="tV0cur" type="number" step="0.01" class="w" placeholder="留空=从静止起步"></div>
+<div class="col"><label data-i18n="lblDist">冲刺距离 (m)</label><input id="tDist" type="number" value="5" step="0.5" class="w"></div>
+<div class="col"><label data-i18n="lblF0t">训练后 <i>F</i><sub>0</sub> (N/kg)</label><input id="tF0" type="number" step="0.01" class="w" placeholder="留空=当前"></div>
+<div class="col"><label data-i18n="lblV0t">训练后 <i>v</i><sub>0</sub> (m/s)</label><input id="tV0" type="number" step="0.01" class="w" placeholder="留空=当前"></div>
+<div class="col"><button class="btn btn-pri" onclick="predict()" data-i18n="btnPredict">预测</button></div>
+</div>
+<div class="hint" id="curInfo" style="margin-top:8px" data-i18n="curInfo">当前值未获取，请先点击「计算」。</div>
+<div id="pred" style="display:none;margin-top:10px">
+<div class="sec-label" data-i18n="secPredResult">预测结果</div>
+<table id="predTbl">
+<tr><th data-i18n="thMetric">指标</th><th data-i18n="thCur">当前</th><th data-i18n="thFut">训练后</th><th data-i18n="thDelta">变化</th></tr>
+<tr><td data-i18n="tdT">冲刺时间 <i>t</i> (s)</td><td id="p_t0">—</td><td id="p_t1">—</td><td id="p_dt">—</td></tr>
+<tr><td data-i18n="tdFe"><i>F</i><sub>e</sub></td><td id="p_f0">—</td><td id="p_f1">—</td><td id="p_df">—</td></tr>
+<tr><td data-i18n="tdVe"><i>v</i><sub>e</sub></td><td id="p_v0">—</td><td id="p_v1">—</td><td id="p_dv">—</td></tr>
+<tr><td data-i18n="tdEN">F-V<sub>EN</sub></td><td id="p_n0">—</td><td id="p_n1">—</td><td id="p_dn">—</td></tr>
+<tr><td data-i18n="tdER">F-V<sub>ER</sub></td><td id="p_r0">—</td><td id="p_r1">—</td><td id="p_dr">—</td></tr>
+</table>
+<div class="pred-note" id="predNote"></div>
+</div>
+</div>
+
+<p style="text-align:center;color:#bbb;font-size:11px;margin-top:2em" data-i18n="footer">F-V Elasticity Tool · Sprint · 附录</p>
+
+<script>
+const G=9.81; let c1=null,c2=null,c3=null; let lastF0=null,lastV0=null,lastK=0; let lastFit=null;
+
+// 支持的语言列表：未来新增语言只需在 I18N 中加同名字典，并在此数组加一项
+const LANGS=['zh','en'];
+
+const I18N={
+  zh:{
+    title:'冲刺力速关系弹性框架', langName:'中',
+    lblF0:'最大水平力 <i>F</i><sub>0</sub> (N/kg)', lblV0:'最大速度 <i>v</i><sub>0</sub> (m/s)',
+    lblAir:'考虑空气阻力（数值解）', lblK:'阻力系数 <i>k</i> (N·s²/m²/kg)', btnCalc:'计算',
+    kHint:'k 的典型范围为 0.0029–0.0047（依运动员体型），取消勾选则用无空气阻力解析解（守恒律精确成立）。',
+    secFit:'从分段时间拟合参数', fitHint:'输入身高、体重、气压、温度与每一帧/分段计时数据，用有阻力闭式解拟合 <i>F</i><sub>0</sub>、<i>v</i><sub>0</sub>，所有帧数据点同时参与最小二乘拟合，并导出 <i>v</i><sub>max</sub>、F-V slope 与 P<sub>max</sub>。',
+    lblH:'身高 (m)', lblM:'体重 (kg)', lblP:'气压 (mmHg)', lblT:'温度 (°C)',
+    thFD:'距离 (m)', thFT:'时间 (s)', btnFit:'拟合参数', btnApply:'应用到弹性分析',
+    btnAddRow:'+ 添加帧/分段时间行', fitErrMinRows:'至少保留 2 行数据。',
+    secFitRes:'拟合结果', fitF0:'<i>F</i><sub>0</sub> (N/kg)', fitV0:'<i>v</i><sub>0</sub> (m/s)', fitPmax:'P<sub>max</sub> (W/kg)', fitSlope:'F-V slope (s⁻¹)', fitVmax:'<i>v</i><sub>max</sub> (m/s)',
+    fitErr:'拟合失败：请检查分段时间（至少 2 行，时间递增、距离递增）。', fitErrAir:'拟合失败：空气密度或阻力系数异常。',
+    fitExtra:'k = {0} (N·s²/m²/kg) · 总力 {1} N · 总功率 {2} W · RMSE {3} m',
+    fitOk:'拟合完成：{0} 个数据点 · R² = {1}',
+    secResiduals:'拟合残差',
+    thResD:'距离 (m)', thResT:'时间 (s)', thResMod:'位置模型 (m)', thResDiff:'残差 (m)', thResSq:'平方差',
+    qualOk:'拟合质量合格：Σ² ≤ 0.2',
+    qualBad:'拟合质量差：Σ² ≥ 0.2，检查帧/分段时间数据是否准确',
+    fitApplyHint:'已将 <i>F</i><sub>0</sub> = {0}、<i>v</i><sub>0</sub> = {1} 填入弹性分析',
+    secKey:'关键距离', cardValley:'谷底距离 <i>d</i><sub>valley</sub>', cardENmin:'最小弹性范数 EN<sub>min</sub>', cardERv:'谷底 F-V<sub>ER</sub>', cardBal:'平衡距离 <i>d</i><sub>balance</sub>',
+    secTable:'各距离弹性', thDist:'距离 (m)', thT:'时间 <i>t</i> (s)', thFe:'<i>F</i><sub>e</sub>', thVe:'<i>v</i><sub>e</sub>', thEN:'F-V<sub>EN</sub>', thER:'F-V<sub>ER</sub>', thCon:'2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub>',
+    consHint:'守恒律 2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub>=1：无阻力时精确成立；有阻力时近似成立（偏差 &lt;2%）。',
+    secKinetic:'力、速度、功率、位移随时间变化',
+    secFeVe:'弹性指标随距离变化', secEN:'弹性范数与方向随距离变化',
+    chartHint:'<i>F</i><sub>e</sub>、<i>v</i><sub>e</sub>、F-V<sub>EN</sub> 用左轴；F-V<sub>ER</sub> 用右轴。红色三角为谷底（F-V<sub>EN</sub> 最小处）。',
+    axTime:'时间 (s)', axKin:'F (N/kg) · v (m/s) · P (W/kg) · d (m)', lblXAxis:'x 轴', axDistName:'距离', axTimeName:'时间',
+    chartF:'<i>F</i>', chartV:'<i>v</i>', chartP:'<i>P</i>', chartD:'<i>d</i>', chartT:'<i>t</i>',
+    secPredict:'训练预测', predHint:'输入初始速度、冲刺距离与训练后的 <i>F</i><sub>0</sub>、<i>v</i><sub>0</sub>，预测冲刺时间与弹性指标的变化。',
+    lblV0cur:'初始速度 <i>v</i> (m/s)', lblDist:'冲刺距离 (m)', lblF0t:'训练后 <i>F</i><sub>0</sub> (N/kg)', lblV0t:'训练后 <i>v</i><sub>0</sub> (m/s)', btnPredict:'预测',
+    curInfo:'当前值未获取，请先点击「计算」。', secPredResult:'预测结果',
+    thMetric:'指标', thCur:'当前', thFut:'训练后', thDelta:'变化',
+    tdT:'冲刺时间 <i>t</i> (s)', tdFe:'<i>F</i><sub>e</sub>', tdVe:'<i>v</i><sub>e</sub>', tdEN:'F-V<sub>EN</sub>', tdER:'F-V<sub>ER</sub>',
+    footer:'F-V Elasticity Tool · Sprint · 附录',
+    errRange:'参数超出合理范围', errCalc:'计算异常',
+    chartFe:'<i>F</i><sub>e</sub>', chartVe:'<i>v</i><sub>e</sub>', chartEN:'F-V<sub>EN</sub>', chartER:'F-V<sub>ER</sub>', chartValley:'<i>d</i><sub>valley</sub>', chartBal:'<i>d</i><sub>balance</sub>',
+    axDist:'距离 (m)', axElas:'弹性', axRatio:'比率',
+    curNow:'当前：<i>F</i><sub>0</sub> = {0} N/kg，<i>v</i><sub>0</sub> = {1} m/s，k = {2}（取自分析结果）',
+    predNeedCalc:'请先点击「计算」获得当前 <i>F</i><sub>0</sub> 和 <i>v</i><sub>0</sub>',
+    predErr:'预测出错：',
+  },
+  en:{
+    title:'Sprint Force-Velocity Relationship Elasticity Framework', langName:'EN',
+    lblF0:'Max horizontal force <i>F</i><sub>0</sub> (N/kg)', lblV0:'Max velocity <i>v</i><sub>0</sub> (m/s)',
+    lblAir:'Include air resistance (numerical)', lblK:'Drag coefficient <i>k</i> (N·s²/m²/kg)', btnCalc:'Analyze',
+    kHint:'Typical k ranges 0.0029–0.0047 (depends on athlete size). Uncheck to use the closed-form no-drag solution (conservation law holds exactly).',
+    secFit:'Fit Parameters from Split Times', fitHint:'Enter height, body mass, barometric pressure, temperature and every frame/split timing. Fits <i>F</i><sub>0</sub> and <i>v</i><sub>0</sub> with the closed-form drag solution. All frame data points are used simultaneously in the least-squares fit, then <i>v</i><sub>max</sub>, F-V slope and P<sub>max</sub> are derived.',
+    lblH:'Height (m)', lblM:'Body mass (kg)', lblP:'Pressure (mmHg)', lblT:'Temperature (°C)',
+    thFD:'Distance (m)', thFT:'Time (s)', btnFit:'Fit', btnApply:'Apply to analysis',
+    btnAddRow:'+ Add frame/split row', fitErrMinRows:'Keep at least 2 rows of data.',
+    secFitRes:'Fit Results', fitF0:'<i>F</i><sub>0</sub> (N/kg)', fitV0:'<i>v</i><sub>0</sub> (m/s)', fitPmax:'P<sub>max</sub> (W/kg)', fitSlope:'F-V slope (s⁻¹)', fitVmax:'<i>v</i><sub>max</sub> (m/s)',
+    fitErr:'Fit failed: check split times (at least 2 rows, distances and times increasing).', fitErrAir:'Fit failed: abnormal air density or drag coefficient.',
+    fitExtra:'k = {0} (N·s²/m²/kg) · total force {1} N · total power {2} W · RMSE {3} m',
+    fitOk:'Fit complete: {0} data points · R² = {1}',
+    secResiduals:'Fit residuals',
+    thResD:'Distance (m)', thResT:'Time (s)', thResMod:'Position model (m)', thResDiff:'Residual (m)', thResSq:'Squared diff',
+    qualOk:'Fit quality OK: Σ² ≤ 0.2',
+    qualBad:'Poor fit: Σ² ≥ 0.2, check frame/split time data',
+    fitApplyHint:'<i>F</i><sub>0</sub> = {0}, <i>v</i><sub>0</sub> = {1} applied to the elasticity analysis',
+    secKey:'Key Distances', cardValley:'Valley distance <i>d</i><sub>valley</sub>', cardENmin:'Min elasticity norm EN<sub>min</sub>', cardERv:'F-V<sub>ER</sub> at valley', cardBal:'Balance distance <i>d</i><sub>balance</sub>',
+    secTable:'Elasticity at Distances', thDist:'Distance (m)', thT:'Time <i>t</i> (s)', thFe:'<i>F</i><sub>e</sub>', thVe:'<i>v</i><sub>e</sub>', thEN:'F-V<sub>EN</sub>', thER:'F-V<sub>ER</sub>', thCon:'2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub>',
+    consHint:'Conservation law 2<i>F</i><sub>e</sub>+<i>v</i><sub>e</sub>=1: exact without drag; approximate with drag (&lt;2% deviation).',
+    secKinetic:'Force, velocity, power and displacement over time',
+    secFeVe:'Elasticity Metrics vs Distance', secEN:'Elasticity Norm and Direction vs Distance',
+    chartHint:'<i>F</i><sub>e</sub>, <i>v</i><sub>e</sub>, F-V<sub>EN</sub> use the left axis; F-V<sub>ER</sub> uses the right axis. Red triangle marks the valley (minimum F-V<sub>EN</sub>).',
+    axTime:'Time (s)', axKin:'F (N/kg) · v (m/s) · P (W/kg) · d (m)', lblXAxis:'x axis', axDistName:'Distance', axTimeName:'Time',
+    chartF:'<i>F</i>', chartV:'<i>v</i>', chartP:'<i>P</i>', chartD:'<i>d</i>', chartT:'<i>t</i>',
+    secPredict:'Training Prediction', predHint:'Enter initial velocity, target distance and post-training <i>F</i><sub>0</sub>, <i>v</i><sub>0</sub> to predict changes in sprint time and elasticity metrics.',
+    lblV0cur:'Initial velocity <i>v</i> (m/s)', lblDist:'Sprint distance (m)', lblF0t:'Post-training <i>F</i><sub>0</sub> (N/kg)', lblV0t:'Post-training <i>v</i><sub>0</sub> (m/s)', btnPredict:'Predict',
+    curInfo:'Not available yet. Click "Analyze" first.', secPredResult:'Prediction Results',
+    thMetric:'Metric', thCur:'Current', thFut:'Post-training', thDelta:'Change',
+    tdT:'Sprint time <i>t</i> (s)', tdFe:'<i>F</i><sub>e</sub>', tdVe:'<i>v</i><sub>e</sub>', tdEN:'F-V<sub>EN</sub>', tdER:'F-V<sub>ER</sub>',
+    footer:'F-V Elasticity Tool · Sprint · Appendix',
+    errRange:'Parameters out of reasonable range', errCalc:'Computation error',
+    chartFe:'<i>F</i><sub>e</sub>', chartVe:'<i>v</i><sub>e</sub>', chartEN:'F-V<sub>EN</sub>', chartER:'F-V<sub>ER</sub>', chartValley:'<i>d</i><sub>valley</sub>', chartBal:'<i>d</i><sub>balance</sub>',
+    axDist:'Distance (m)', axElas:'Elasticity', axRatio:'Ratio',
+    curNow:'Current: <i>F</i><sub>0</sub> = {0} N/kg, <i>v</i><sub>0</sub> = {1} m/s, k = {2} (from analysis)',
+    predNeedCalc:'Click "Analyze" first to obtain current <i>F</i><sub>0</sub> and <i>v</i><sub>0</sub>',
+    predErr:'Prediction error: ',
+  }
+};
+let LANG=(localStorage.getItem('fvSprintLang')||'zh');
+if(!LANGS.includes(LANG))LANG='zh';
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k;}
+function fmt(s){const a=arguments;return s.replace(/\{(\d)\}/g,function(m,i){return a[+i+1];});}
+function renderLangBar(){
+  const bar=document.getElementById('langBar');
+  if(!bar)return;
+  bar.innerHTML=LANGS.map(function(l){
+    const nm=(I18N[l]&&I18N[l].langName)||l;
+    return '<button class="lang-btn'+(LANG===l?' active':'')+'" onclick="setLang(\''+l+'\')">'+nm+'</button>';
+  }).join('');
+}
+function setLang(l){
+  if(!LANGS.includes(l))return;
+  LANG=l;
+  localStorage.setItem('fvSprintLang',LANG);
+  applyLang();
+}
+function applyLang(){
+  document.documentElement.lang=(LANG==='zh')?'zh-CN':'en';
+  document.title=t('title');
+  document.querySelectorAll('[data-i18n]').forEach(function(el){el.innerHTML=t(el.getAttribute('data-i18n'));});
+  renderLangBar();
+  if(document.getElementById('fitRes').style.display==='block'){try{renderFitQual();}catch(e){}}
+  if(document.getElementById('out').style.display==='block'){try{calc();}catch(e){}}
+  if(document.getElementById('pred').style.display==='block'){try{predict();}catch(e){}}
+}
+applyLang();
+
+function toggleAir(){
+  const on=document.getElementById('airChk').checked;
+  document.getElementById('kBox').style.display=on?'flex':'none';
+}
+
+// ── 核心：冲刺时间与弹性 ──
+function tauFromXi(xi){
+  if(xi<1e-12) return 0;
+  let tau=xi+1-Math.exp(-(xi+1));
+  for(let i=0;i<100;i++){
+    const f=tau-1+Math.exp(-tau)-xi;
+    const fp=1-Math.exp(-tau);
+    if(Math.abs(f)<1e-14) break;
+    tau-=f/fp;
+    if(tau<0) tau=xi+1;
+  }
+  return tau;
+}
+function timeWithDrag(F0,v0,k,xmax,vi){
+  if(xmax<=0) return 0;
+  const dt=0.001; let x=0,t=0,v=vi||0;
+  while(x<xmax){
+    const a1=F0*(1-v/v0)-k*v*v;
+    const v2=v+0.5*dt*a1, a2=F0*(1-v2/v0)-k*v2*v2;
+    const v3=v+0.5*dt*a2, a3=F0*(1-v3/v0)-k*v3*v3;
+    const v4=v+dt*a3, a4=F0*(1-v4/v0)-k*v4*v4;
+    const dv=dt/6*(a1+2*a2+2*a3+a4);
+    const vn=v+dv;
+    const xn=x+dt*(v+vn)/2;
+    if(xn>=xmax) return t+dt*(xmax-x)/(xn-x);
+    x=xn; v=vn; t+=dt;
+  }
+  return t;
+}
+function sprintMetrics(F0,v0,k,x,vi){
+  if(F0<=0||v0<=0||x<=0) return null;
+  vi=vi||0;
+  if(k<=0&&vi<=0){
+    const xi=F0*x/(v0*v0);
+    const tau=tauFromXi(xi);
+    const t=v0/F0*tau;
+    const A=xi/(tau*(1-Math.exp(-tau)));
+    const Fe=1-A, ve=2*A-1;
+    const EN=Math.hypot(Fe,ve), ER=Fe/Math.abs(ve);
+    return {t,Fe,ve,EN,ER,cons:2*Fe+ve};
+  }else{
+    const t=timeWithDrag(F0,v0,k,x,vi);
+    const tF=timeWithDrag(F0*1.01,v0,k,x,vi);
+    const tV=timeWithDrag(F0,v0*1.01,k,x,vi);
+    const Fe=-(tF-t)/t/0.01, ve=-(tV-t)/t/0.01;
+    const EN=Math.hypot(Fe,ve), ER=Fe/Math.abs(ve);
+    return {t,Fe,ve,EN,ER,cons:2*Fe+ve};
+  }
+}
+// 通用 HTML tooltip（Chart.js external，需 enabled:false 避免双框）
+function chartTipExternal(tipId, useValley){
+  return function(context){
+    const tip=document.getElementById(tipId);
+    if(!tip)return;
+    const tp=context.tooltip;
+    if(!tp.opacity||!tp.dataPoints||!tp.dataPoints.length){tip.style.display='none';return;}
+    let dps=tp.dataPoints;
+    // 谷底优先：鼠标在谷底像素附近时只显示谷底
+    if(useValley&&window._vxData){
+      const feveXMode=document.getElementById('feveX').value;
+      const scale=context.chart.scales.x;
+      const vxv=feveXMode==='t'?window._vxData.t:window._vxData.x;
+      const vxPix=scale.getPixelForValue(vxv);
+      if(Math.abs(tp.caretX-vxPix)<14){
+        const xName2=feveXMode==='t'?t('axTimeName'):t('axDistName');
+        const xUnit2=feveXMode==='t'?' s':' m';
+        tip.innerHTML='<span style="color:#E74C3C">▲ '+t('chartValley')+'</span>: '+xName2+' '+vxv.toFixed(1)+xUnit2+', EN '+window._vxData.en.toFixed(3);
+        const canvas0=context.chart.canvas, box0=canvas0.parentElement;
+        const ox0=canvas0.getBoundingClientRect().left-box0.getBoundingClientRect().left;
+        const oy0=canvas0.getBoundingClientRect().top-box0.getBoundingClientRect().top;
+        tip.style.display='block';
+        let lx0=ox0+tp.caretX+10;
+        if(lx0+tip.offsetWidth>box0.clientWidth)lx0=ox0+tp.caretX-tip.offsetWidth-10;
+        tip.style.left=lx0+'px';
+        tip.style.top=(oy0+tp.caretY-10)+'px';
+        return;
+      }
+      const vd=dps.find(function(d){return d.datasetIndex===4;});
+      if(vd) dps=[vd];
+    }
+    const dp=dps[0];
+    const ds=context.chart.data.datasets[dp.datasetIndex];
+    const xSel=useValley?document.getElementById('feveX'):document.getElementById('kinX');
+    const isDist=useValley?(xSel.value!=='t'):(xSel.value==='d');
+    const xName=isDist?t('axDistName'):t('axTimeName');
+    const xUnit=isDist?' m':' s';
+    if(useValley&&dp.datasetIndex===4&&window._vxData){
+      const feveXMode=document.getElementById('feveX').value;
+      const xv=feveXMode==='t'?window._vxData.t:window._vxData.x;
+      html='<span style="color:#E74C3C">▲ '+t('chartValley')+'</span>: '+xName+' '+xv.toFixed(1)+xUnit+', EN '+window._vxData.en.toFixed(3);
+    }else{
+      html=xName+' '+dp.parsed.x.toFixed(2)+xUnit+', '+ds.label+' '+dp.parsed.y.toFixed(3);
+    }
+    tip.innerHTML=html;
+    const canvas=context.chart.canvas, box=canvas.parentElement;
+    const ox=canvas.getBoundingClientRect().left-box.getBoundingClientRect().left;
+    const oy=canvas.getBoundingClientRect().top-box.getBoundingClientRect().top;
+    tip.style.display='block';
+    let lx=ox+tp.caretX+10;
+    if(lx+tip.offsetWidth>box.clientWidth)lx=ox+tp.caretX-tip.offsetWidth-10;
+    tip.style.left=lx+'px';
+    tip.style.top=(oy+tp.caretY-10)+'px';
+  };
+}
+// F/v/P/d 随时间变化（有阻力，RK4，质量归一化）
+function kinetics(F0,v0,k,tEnd,step){
+  const out=[];
+  let x=0,t=0,v=0;
+  while(t<=tEnd+1e-9){
+    const F=F0*(1-v/v0);          // 水平力 (N/kg)
+    const a=F-k*v*v;              // 加速度
+    out.push({t,x,v,F,a,P:F*v});
+    // RK4
+    const k1=F0*(1-v/v0)-k*v*v;
+    const v2=v+0.5*step*k1, k2=F0*(1-v2/v0)-k*v2*v2;
+    const v3=v+0.5*step*k2, k3=F0*(1-v3/v0)-k*v3*v3;
+    const v4=v+step*k3, k4=F0*(1-v4/v0)-k*v4*v4;
+    const dv=step/6*(k1+2*k2+2*k3+k4);
+    const vn=v+dv;
+    x+=step*(v+vn)/2; v=vn; t+=step;
+  }
+  return out;
+}
+function fmtDelta(d){
+  if(d===null||isNaN(d))return '—';
+  const s=d>0?'+':'';
+  return `<span class="${d>=0?'delta-up':'delta-down'}">${s}${(100*d).toFixed(1)}%</span>`;
+}
+
+/* ===== 从分段时间拟合 F0/v0：位置模型（Eq.5-9 有阻力闭式解） ===== */
+function vDragModel(t,F0,v0,k){
+  const c=F0/v0;
+  const lam=Math.sqrt(c*c+4*k*F0);          // Eq.6
+  const vmax=(lam-c)/(2*k);                 // Eq.7
+  const al=(lam-c)/(lam+c);                 // Eq.9
+  return vmax*(1-Math.exp(-lam*t))/(1+al*Math.exp(-lam*t));  // Eq.5
+}
+function dDragModel(t,F0,v0,k){
+  const c=F0/v0;
+  const lam=Math.sqrt(c*c+4*k*F0);          // Eq.6
+  const vmax=(lam-c)/(2*k);                 // Eq.7
+  const al=(lam-c)/(lam+c);                 // Eq.9
+  return vmax*t + (1/k)*Math.log((1+al*Math.exp(-lam*t))/(1+al));  // Eq.8
+}
+function lmFitSprint(th0,ds,ts,k){
+  let F0=th0[0],v0=th0[1];
+  let r=ds.map((d,i)=>dDragModel(ts[i],F0,v0,k)-d);
+  let rss=r.reduce((s,e)=>s+e*e,0);
+  let lam=1e-3;
+  for(let it=0;it<80;it++){
+    const J=[];
+    const eF=1e-4*Math.max(F0,1), eV=1e-4*Math.max(v0,1);
+    for(let i=0;i<ds.length;i++){
+      const t=ts[i];
+      J.push([(dDragModel(t,F0+eF,v0,k)-dDragModel(t,F0-eF,v0,k))/(2*eF),
+              (dDragModel(t,F0,v0+eV,k)-dDragModel(t,F0,v0-eV,k))/(2*eV)]);
+    }
+    let a00=0,a01=0,a11=0,b0=0,b1=0;
+    for(let i=0;i<ds.length;i++){
+      a00+=J[i][0]*J[i][0]; a01+=J[i][0]*J[i][1]; a11+=J[i][1]*J[i][1];
+      b0+=J[i][0]*r[i]; b1+=J[i][1]*r[i];
+    }
+    const d00=a00+lam*Math.max(a00,1e-9), d11=a11+lam*Math.max(a11,1e-9);
+    const det=d00*d11-a01*a01;
+    if(Math.abs(det)<1e-12) break;
+    const dF=(-b0*d11+b1*a01)/det, dV=(-b1*d00+b0*a01)/det;
+    const nF=Math.max(0.5,Math.min(30,F0+dF)), nV=Math.max(1,Math.min(20,v0+dV));
+    const nr=ds.map((d,i)=>dDragModel(ts[i],nF,nV,k)-d);
+    const nrss=nr.reduce((s,e)=>s+e*e,0);
+    if(nrss<rss){F0=nF;v0=nV;r=nr;rss=nrss;lam*=0.5;}
+    else lam*=4;
+    if(lam>1e8) break;
+  }
+  return {F0,v0,rss,r};
+}
+function addFitRow(){
+  const tb=document.querySelector('#fitTbl tbody');
+  const n=tb.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td>'+n+'</td><td><input type="number" value="" step="0.5" placeholder="—"></td><td><input type="number" value="" step="0.01" placeholder="—"></td><td><button class="btn btn-sec" onclick="delFitRow(this)" style="padding:1px 8px">×</button></td>';
+  tb.appendChild(tr);
+}
+function delFitRow(btn){
+  const tb=document.querySelector('#fitTbl tbody');
+  if(tb.rows.length<=2){alert(t('fitErrMinRows'));return;}
+  btn.closest('tr').remove();
+  // 重编号
+  Array.from(tb.rows).forEach(function(r,i){r.cells[0].textContent=i+1;});
+}
+function fitFromSplits(){
+  try{
+    const ds=[],ts=[];
+    document.querySelectorAll('#fitTbl tbody tr').forEach(function(tr){
+      const d=parseFloat(tr.cells[1].querySelector('input').value);
+      const t=parseFloat(tr.cells[2].querySelector('input').value);
+      if(d>0&&t>0){ds.push(d);ts.push(t);}
+    });
+    if(ds.length<3){alert(t('fitErr'));return;}
+    for(let i=1;i<ds.length;i++) if(ds[i]<=ds[i-1]||ts[i]<=ts[i-1]){alert(t('fitErr'));return;}
+    const m=+document.getElementById('fM').value, h=+document.getElementById('fH').value;
+    const P=+document.getElementById('fP').value, T=+document.getElementById('fT').value;
+    if(!(m>0)||!(h>0)){alert(t('fitErr'));return;}
+    const rho=1.293*P*273/((273+T)*760);
+    const Af=0.2025*Math.pow(h,0.725)*Math.pow(m,0.425)*0.266;
+    const k=rho*Af*0.9/(2*m);
+    if(!(k>0)||k>0.02){alert(t('fitErrAir'));return;}
+    // 多初值 LM，位置残差平方和最小（模仿 Samozino 宏观法：Position model vs measured distance）
+    const seeds=[[8.5,8.5],[8,9],[9,8],[7,8],[8,7],[9,9],[10,8],[8,8.5],[8.5,8],[7.5,9.5],[9.5,7.5]];
+    let best=null,bestR=Infinity;
+    for(const s0 of seeds){
+      const r=lmFitSprint(s0,ds,ts,k);
+      if(r.rss<bestR){bestR=r.rss;best=r;}
+    }
+    const F0=best.F0, v0=best.v0;
+    const c=F0/v0, lam=Math.sqrt(c*c+4*k*F0);
+    const vmax=(lam-c)/(2*k), al=(lam-c)/(lam+c);
+    const slope=-F0/v0, Pmax=F0*v0/4;
+    // R² 与 RMSE（位置）
+    const dm=ds.reduce((s,e)=>s+e,0)/ds.length;
+    const tss=ds.reduce((s,e)=>s+(e-dm)*(e-dm),0);
+    const R2=tss>0?Math.max(0,1-bestR/tss):0;
+    const rmse=Math.sqrt(bestR/ds.length);
+    lastFit={F0,v0,k,vmax,slope,Pmax,m,R2,rmse,rss:bestR};
+    document.getElementById('rF0').textContent=F0.toFixed(2);
+    document.getElementById('rV0').textContent=v0.toFixed(2);
+    document.getElementById('rPmax').textContent=Pmax.toFixed(1);
+    document.getElementById('rSlope').textContent=slope.toFixed(2);
+    document.getElementById('rVmax').textContent=vmax.toFixed(2);
+    document.getElementById('fitExtra').innerHTML=fmt(t('fitExtra'),k.toFixed(4),(F0*m).toFixed(0),(Pmax*m).toFixed(0),rmse.toFixed(4))+' &nbsp;·&nbsp; '+fmt(t('fitOk'),ds.length,R2.toFixed(3));
+    // 位置残差表（模仿 FVPsprint_2022.xlsx：Position model vs Distance, Square Differences）
+    const rtbl=document.getElementById('resTbl');
+    while(rtbl.rows.length>1) rtbl.deleteRow(1);
+    let sumSq=0;
+    for(let i=0;i<ds.length;i++){
+      const dmod=dDragModel(ts[i],F0,v0,k);
+      const diff=dmod-ds[i];
+      const sq=diff*diff;
+      sumSq+=sq;
+      const tr=rtbl.insertRow();
+      tr.innerHTML='<td>'+ds[i].toFixed(1)+'</td><td>'+ts[i].toFixed(2)+'</td><td>'+dmod.toFixed(3)+'</td><td>'+diff.toFixed(3)+'</td><td>'+sq.toFixed(4)+'</td>';
+    }
+    const tr=rtbl.insertRow();
+    const ok=sumSq<=0.2;
+    tr.innerHTML='<td colspan="4" style="text-align:right;font-weight:700">Σ²</td><td style="font-weight:700;color:'+(ok?'#20C997':'#E74C3C')+'">'+sumSq.toFixed(3)+(ok?' ✓':' ⚠')+'</td>';
+    renderFitQual();
+    document.getElementById('fitRes').style.display='block';
+    applyFit();
+  }catch(e){alert(t('fitErr')+(e&&e.message?' ('+e.message+')':''));}
+}
+function renderFitQual(){
+  if(!lastFit)return;
+  const q=document.getElementById('fitQual');
+  if(!q)return;
+  q.style.display='block';
+  const ok=lastFit.rss<=0.2;
+  q.innerHTML=ok
+    ? '<span style="color:#20C997">✓ '+t('qualOk')+'</span>'
+    : '<span style="color:#E74C3C">⚠ '+t('qualBad')+'</span>';
+}
+function applyFit(){
+  if(!lastFit)return;
+  document.getElementById('F0').value=lastFit.F0.toFixed(2);
+  document.getElementById('V0').value=lastFit.v0.toFixed(2);
+  document.getElementById('k').value=lastFit.k.toFixed(4);
+  document.getElementById('airChk').checked=true;
+  calc();
+  if(document.getElementById('pred')){try{predict();}catch(e){}}
+}
+
+function calc(){
+  try{
+    const F0=+document.getElementById('F0').value, V0=+document.getElementById('V0').value;
+    const air=document.getElementById('airChk').checked;
+    const k=air?(+document.getElementById('k').value||0.0038):0;
+    const xMax=30;
+    if(!F0||!V0||F0<=0||V0<=0){alert(t('errRange'));return;}
+    lastF0=F0; lastV0=V0; lastK=k;
+    document.getElementById('out').style.display='block';
+
+    // 采样
+    const pts=[];
+    const step=air?0.2:0.1;
+    for(let x=0.5;x<=xMax+1e-9;x+=step){
+      const m=sprintMetrics(F0,V0,k,x);
+      if(m) pts.push({x,m});
+    }
+    if(pts.length<3){alert(t('errRange'));return;}
+
+    // valley（EN 最小）与平衡（ER=1）
+    let vx=pts[0];
+    for(const p of pts) if(p.m.EN<vx.m.EN) vx=p;
+    let bx=null;
+    for(let i=1;i<pts.length;i++){
+      const e0=pts[i-1].m.ER, e1=pts[i].m.ER;
+      if(e0>=1&&e1<1){const f=(e0-1)/(e0-e1); bx=pts[i-1].x+f*(pts[i].x-pts[i-1].x);break;}
+    }
+    document.getElementById('rValley').textContent=vx.x.toFixed(1)+' m';
+    document.getElementById('rBal').textContent=bx?(bx.toFixed(1)+' m'):'—';
+
+    // 表格：5/10/15/20/25/30 + valley
+    const rows=[[5],[10],[15],[20],[25],[30]];
+    if(!rows.some(r=>Math.abs(r[0]-vx.x)<0.5)) rows.push([vx.x]);
+    const tbl=document.getElementById('distTbl');
+    while(tbl.rows.length>1) tbl.deleteRow(1);
+    for(const r of rows){
+      const m=sprintMetrics(F0,V0,k,r[0]);
+      if(!m) continue;
+      const tr=tbl.insertRow();
+      tr.innerHTML='<td>'+r[0].toFixed(1)+'</td><td>'+m.t.toFixed(2)+'</td><td>'+m.Fe.toFixed(3)+'</td><td>'+m.ve.toFixed(3)+'</td><td>'+m.EN.toFixed(3)+'</td><td>'+m.ER.toFixed(2)+'</td><td>'+m.cons.toFixed(3)+'</td>';
+    }
+
+    document.getElementById('curInfo').innerHTML=fmt(t('curNow'),F0.toFixed(1),V0.toFixed(2),air?k.toFixed(4):'0');
+
+    // 图表构建（拆分：x 轴独立切换不互相跳动）
+    window._pts=pts;
+    buildKin(F0,V0,k,xMax,document.getElementById('kinX').value);
+    buildFeve(F0,V0,k,xMax,pts,vx,bx,document.getElementById('feveX').value);
+  }catch(e){
+    alert(t('errCalc')+': '+e.message);
+  }
+}
+
+function buildKin(F0,V0,k,xMax,kinXMode){
+  if(c3){c3.destroy();c3=null;}
+  const tEnd=timeWithDrag(F0,V0,k,xMax);
+  const kin=kinetics(F0,V0,k,tEnd,0.01);
+  const dMode=kinXMode==='d';
+  const kx=dMode?function(p){return p.x;}:function(p){return p.t;};
+  const ctx0=document.getElementById('kinC').getContext('2d');
+  c3=new Chart(ctx0,{
+    type:'line',
+    data:{datasets:[
+      {label:t('chartF'),data:kin.map(p=>({x:kx(p),y:p.F})),borderColor:'#E74C3C',borderWidth:2,pointRadius:0,tension:0,yAxisID:'y'},
+      {label:t('chartV'),data:kin.map(p=>({x:kx(p),y:p.v})),borderColor:'#00B4D8',borderWidth:2,pointRadius:0,tension:0,yAxisID:'y'},
+      {label:t('chartP'),data:kin.map(p=>({x:kx(p),y:p.P})),borderColor:'#F39C12',borderWidth:2,pointRadius:0,tension:0,yAxisID:'y'},
+      {label:(dMode?t('chartT'):t('chartD')),data:kin.map(p=>({x:kx(p),y:(dMode?p.t:p.x)})),borderColor:'#0E8388',borderWidth:2,pointRadius:0,tension:0,yAxisID:'y'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{mode:'nearest',intersect:false,enabled:false,external:chartTipExternal('kinTip'),callbacks:{title:function(){return '';},label:function(){return '';}}}},
+      scales:{
+        x:{type:'linear',position:'bottom',title:{display:true,text:(dMode?t('axDist'):t('axTime')),font:{size:12}},min:0,max:(dMode?xMax:tEnd),grid:{color:'#eee'}},
+        y:{title:{display:true,text:t('axKin'),font:{size:12}},min:0,grid:{color:'#eee'}}
+      }
+    }
+  });
+  document.getElementById('kinC').addEventListener('mouseleave',function(){const tip=document.getElementById('kinTip');if(tip)tip.style.display='none';});
+  const box=document.getElementById('kinLegend');
+  if(!box)return;
+  const items=[
+    {i:0,sw:'#E74C3C',html:t('chartF')},
+    {i:1,sw:'#00B4D8',html:t('chartV')},
+    {i:2,sw:'#F39C12',html:t('chartP')},
+    {i:3,sw:'#0E8388',html:(dMode?t('chartT'):t('chartD'))}
+  ];
+  box.innerHTML=items.map(function(it){
+    return '<span class="lg" data-i="'+it.i+'"><span class="sw" style="background:'+it.sw+'"></span>'+it.html+'</span>';
+  }).join('');
+  box.querySelectorAll('.lg').forEach(function(el){
+    el.addEventListener('click',function(){
+      const ds=c3.data.datasets[+el.dataset.i];
+      ds.hidden=!ds.hidden;
+      el.classList.toggle('dim',!!ds.hidden);
+      c3.update();
+    });
+  });
+}
+
+function buildFeve(F0,V0,k,xMax,pts,vx,bx,feveXMode){
+  if(c1){c1.destroy();c1=null;}
+  window._vxData={x:vx.x,t:vx.m.t,en:vx.m.EN};
+  const tMode=feveXMode==='t';
+  const fx=tMode?function(p){return p.m.t;}:function(p){return p.x;};
+  const feveXMax=tMode?pts[pts.length-1].m.t:xMax;
+  const ctx1=document.getElementById('feveC').getContext('2d');
+  // 平衡点 d_balance（ER=1 交叉处，画在 F-V_ER 线上 y=1）
+  let balPt=null;
+  if(bx){const bm=sprintMetrics(F0,V0,k,bx);if(bm)balPt={x:(tMode?bm.t:bx),y:1};}
+  c1=new Chart(ctx1,{
+    type:'line',
+    data:{datasets:[
+      {label:t('chartFe'),data:pts.map(p=>({x:fx(p),y:p.m.Fe})),borderColor:'#0E8388',borderWidth:2,pointRadius:0,fill:false,tension:0,yAxisID:'y'},
+      {label:t('chartVe'),data:pts.map(p=>({x:fx(p),y:p.m.ve})),borderColor:'#F39C12',borderWidth:2,pointRadius:0,fill:false,tension:0,yAxisID:'y'},
+      {label:t('chartEN'),data:pts.map(p=>({x:fx(p),y:p.m.EN})),borderColor:'#20C997',borderWidth:2,pointRadius:0,fill:false,tension:0,yAxisID:'y'},
+      {label:t('chartER'),data:pts.map(p=>({x:fx(p),y:Math.min(p.m.ER,10)})),borderColor:'#00B4D8',borderWidth:2,pointRadius:0,tension:0,yAxisID:'y1'},
+      {label:t('chartValley'),data:[{x:(tMode?vx.m.t:vx.x),y:vx.m.EN}],backgroundColor:'#E74C3C',borderColor:'#fff',borderWidth:1.5,pointRadius:5,pointHitRadius:15,pointStyle:'circle',showLine:false,order:-10,yAxisID:'y'},
+      {label:t('chartBal'),data:balPt?[balPt]:[],backgroundColor:'#7D3C98',borderColor:'#fff',borderWidth:1.5,pointRadius:5,pointHitRadius:15,pointStyle:'circle',showLine:false,order:-10,yAxisID:'y1'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{mode:'nearest',intersect:false,enabled:false,external:chartTipExternal('feveTip',true),callbacks:{title:function(){return '';},label:function(){return '';}}}},
+      scales:{
+        x:{type:'linear',position:'bottom',title:{display:true,text:(tMode?t('axTime'):t('axDist')),font:{size:12}},min:0,max:feveXMax,grid:{color:'#eee'}},
+        y:{title:{display:true,text:t('axElas'),font:{size:12}},min:0,max:1,grid:{color:'#eee'}},
+        y1:{position:'right',title:{display:true,text:t('axRatio'),font:{size:12}},min:0,max:10,grid:{drawOnChartArea:false}}
+      }
+    }
+  });
+  document.getElementById('feveC').addEventListener('mouseleave',function(){const tip=document.getElementById('feveTip');if(tip)tip.style.display='none';});
+  const box=document.getElementById('feveLegend');
+  if(!box)return;
+  const items=[
+    {i:4,sw:'#E74C3C',pt:true,html:t('chartValley')},
+    {i:5,sw:'#7D3C98',pt:true,html:t('chartBal')},
+    {i:0,sw:'#0E8388',html:t('chartFe')},
+    {i:1,sw:'#F39C12',html:t('chartVe')},
+    {i:2,sw:'#20C997',html:t('chartEN')},
+    {i:3,sw:'#00B4D8',html:t('chartER')}
+  ];
+  box.innerHTML=items.map(function(it){
+    return '<span class="lg" data-i="'+it.i+'"><span class="sw'+(it.pt?' pt':'')+'" style="background:'+it.sw+'"></span>'+it.html+'</span>';
+  }).join('');
+  box.querySelectorAll('.lg').forEach(function(el){
+    el.addEventListener('click',function(){
+      const ds=c1.data.datasets[+el.dataset.i];
+      ds.hidden=!ds.hidden;
+      el.classList.toggle('dim',!!ds.hidden);
+      c1.update();
+    });
+  });
+}
+
+function kinXChange(){
+  try{
+    if(!lastF0)return;
+    buildKin(lastF0,lastV0,lastK,30,document.getElementById('kinX').value);
+  }catch(e){}
+}
+function feveXChange(){
+  try{
+    if(!lastF0)return;
+    const pts=window._pts;
+    if(!pts||!pts.length)return;
+    let vx=pts[0];
+    for(const p of pts) if(p.m.EN<vx.m.EN) vx=p;
+    let bx=null;
+    for(let i=1;i<pts.length;i++){
+      const e0=pts[i-1].m.ER, e1=pts[i].m.ER;
+      if(e0>=1&&e1<1){const f=(e0-1)/(e0-e1); bx=pts[i-1].x+f*(pts[i].x-pts[i-1].x);break;}
+    }
+    buildFeve(lastF0,lastV0,lastK,30,pts,vx,bx,document.getElementById('feveX').value);
+  }catch(e){}
+}
+
+function predict(){
+  try{
+    if(lastF0===null||lastV0===null){alert(t('predNeedCalc'));return;}
+    const x=+document.getElementById('tDist').value;
+    const vi=+document.getElementById('tV0cur').value||0;
+    const tF0=+document.getElementById('tF0').value||lastF0;
+    const tV0=+document.getElementById('tV0').value||lastV0;
+    const cur=sprintMetrics(lastF0,lastV0,lastK,x,vi);
+    const fut=sprintMetrics(tF0,tV0,lastK,x,vi);
+    if(!cur||!fut){alert(t('errRange'));return;}
+    document.getElementById('pred').style.display='block';
+    document.getElementById('p_t0').textContent=cur.t.toFixed(2);
+    document.getElementById('p_t1').textContent=fut.t.toFixed(2);
+    document.getElementById('p_dt').innerHTML=fmtDelta((fut.t-cur.t)/cur.t);
+    document.getElementById('p_f0').textContent=cur.Fe.toFixed(3);
+    document.getElementById('p_f1').textContent=fut.Fe.toFixed(3);
+    document.getElementById('p_df').innerHTML=fmtDelta((fut.Fe-cur.Fe)/cur.Fe);
+    document.getElementById('p_v0').textContent=cur.ve.toFixed(3);
+    document.getElementById('p_v1').textContent=fut.ve.toFixed(3);
+    document.getElementById('p_dv').innerHTML=fmtDelta((fut.ve-cur.ve)/cur.ve);
+    document.getElementById('p_n0').textContent=cur.EN.toFixed(3);
+    document.getElementById('p_n1').textContent=fut.EN.toFixed(3);
+    document.getElementById('p_dn').innerHTML=fmtDelta((fut.EN-cur.EN)/cur.EN);
+    document.getElementById('p_r0').textContent=cur.ER.toFixed(2);
+    document.getElementById('p_r1').textContent=fut.ER.toFixed(2);
+    document.getElementById('p_dr').innerHTML=fmtDelta((fut.ER-cur.ER)/cur.ER);
+  }catch(e){
+    alert(t('predErr')+e.message);
+  }
+}
+</script>
+</body>
+</html>

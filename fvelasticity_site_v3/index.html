@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F-V relationship Elasticity Frameworks</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{max-width:800px;margin:2em auto;padding:1.5em 2em;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.6;color:#333;background:#f5fbfa}
+h1{font-size:1.6em;text-align:center;background:linear-gradient(135deg,#00B4D8,#20C997);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0.4em 0 0.2em;font-weight:700}
+.panel{border:none;border-radius:14px;padding:18px 20px;margin:14px 0;background:#fff;box-shadow:0 2px 12px rgba(0,180,216,0.08)}
+.card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:14px;background:linear-gradient(135deg,#e0f7fa,#e8f8f5);margin:12px 0;text-decoration:none;color:#333;transition:transform .2s,box-shadow .2s;border:1.5px solid #cfeef0}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,180,216,0.2)}
+.card .tt{font-size:1.15em;font-weight:700;color:#0a7d8c}
+.badge{background:linear-gradient(135deg,#00B4D8,#20C997);color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;white-space:nowrap}
+.foot{text-align:center;color:#888;font-size:12px;margin-top:3em;line-height:1.9}
+.lang-btn{border:none;background:transparent;font-size:12px;font-weight:600;padding:4px 9px;border-radius:4px;cursor:pointer;color:#666;font-family:inherit;line-height:1.2;transition:background .15s,color .15s}
+.lang-btn:hover{background:#eee}
+.lang-btn.active{background:#0E8388;color:#fff}
+</style>
+</head>
+<body>
+
+<div id="langBar" style="position:fixed;top:14px;right:18px;z-index:99;display:flex;gap:4px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:3px;box-shadow:0 1px 4px rgba(0,0,0,.08)"></div>
+
+<h1 data-i18n="title">力速关系弹性框架</h1>
+
+<div class="panel">
+<a class="card" href="jump/">
+  <div class="tt" data-i18n="jump">垂直跳 Vertical Jump</div>
+  <div class="badge" data-i18n="enter">进入 →</div>
+</a>
+<a class="card" href="sprint/">
+  <div class="tt" data-i18n="sprint">冲刺 Sprint</div>
+  <div class="badge" data-i18n="enter2">进入 →</div>
+</a>
+</div>
+
+<div class="foot">
+  <span data-i18n="madeBy">李朝乾制作</span><span id="madeByEnWrap"> · <span data-i18n="madeByEn">provided by Zhaoqian Li.</span></span><br>
+  <span data-i18n="contact">请联系: lzqf3ng@gmail.com</span><br>
+  <span data-i18n="visits">访问次数</span> <span id="busuanzi_value_site_pv">0</span>
+</div>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script>
+const I18N={
+  zh:{title:'力速关系弹性框架',jump:'垂直跳 Vertical Jump',sprint:'冲刺 Sprint',enter:'进入 →',enter2:'进入 →',madeBy:'李朝乾制作',madeByEn:'provided by Zhaoqian Li.',contact:'请联系: lzqf3ng@gmail.com',visits:'访问次数',langName:'中'},
+  en:{title:'F-V relationship Elasticity Frameworks',jump:'Vertical Jump',sprint:'Sprint',enter:'Enter →',enter2:'Enter →',madeBy:'',madeByEn:'provided by Zhaoqian Li.',contact:'Contact: lzqf3ng@gmail.com',visits:'Visits',langName:'EN'}
+};
+const LANGS=['zh','en'];
+let LANG=(localStorage.getItem('fvSiteLang')||'zh');
+if(!LANGS.includes(LANG))LANG='zh';
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k;}
+function renderLangBar(){
+  const bar=document.getElementById('langBar');
+  if(!bar)return;
+  bar.innerHTML=LANGS.map(function(l){
+    const nm=(I18N[l]&&I18N[l].langName)||l;
+    return '<button class="lang-btn'+(LANG===l?' active':'')+'" onclick="setLang(\''+l+'\')">'+nm+'</button>';
+  }).join('');
+}
+function setLang(l){
+  if(!LANGS.includes(l))return;
+  LANG=l;
+  localStorage.setItem('fvSiteLang',LANG);
+  applyLang();
+}
+function applyLang(){
+  document.documentElement.lang=(LANG==='zh')?'zh-CN':'en';
+  document.querySelectorAll('[data-i18n]').forEach(function(el){el.innerHTML=t(el.getAttribute('data-i18n'));});
+  const mb=document.querySelector('[data-i18n="madeBy"]');
+  if(mb)mb.style.display=(LANG==='en')?'none':'inline';
+  const mbe=document.getElementById('madeByEnWrap');
+  if(mbe)mbe.style.display=(LANG==='zh')?'none':'inline';
+  renderLangBar();
+}
+renderLangBar();
+applyLang();
+</script>
+
+</body>
+</html>
